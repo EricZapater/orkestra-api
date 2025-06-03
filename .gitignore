@@ -22,7 +22,6 @@ Thumbs.db
 *.swp
 
 # Fitxers de dependències
-go.sum
 vendor/
 
 # Fitxers d'entorn
