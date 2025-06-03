@@ -1,0 +1,30 @@
+# Binari compilat
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Carpetes de Go build cache
+/build/
+/bin/
+/dist/
+
+# Fitxers del sistema
+.DS_Store
+Thumbs.db
+
+# Fitxers d'IDE comuns
+.vscode/
+.idea/
+*.swp
+
+# Fitxers de dependències
+go.sum
+vendor/
+
+# Fitxers d'entorn
+.env
+.env.*
