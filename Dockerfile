@@ -19,5 +19,5 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 COPY --from=builder /app/main .
 COPY --from=builder /app/migrations ./migrations
-EXPOSE 8126
+EXPOSE 8125
 CMD ["./main"]
