@@ -4,6 +4,7 @@ package main
 import (
 	"log"
 	"orkestra-api/config"
+	"orkestra-api/server"
 	"orkestra-api/utils"
 )
 
@@ -20,23 +21,19 @@ func main() {
     }
     
 
-    utils := utils.NewUtils(dbAdmin)
-    exists, err := utils.CheckDatabase(cfg.DBName)
+    utilsApp := utils.NewUtils(dbAdmin)
+    exists, err := utilsApp.CheckDatabase(cfg.DBName)
     if err != nil {
         log.Fatalf("%v", err)
     }
     if(!exists){
-        err := utils.CreateDatabase(cfg.DBName)
+        err := utilsApp.CreateDatabase(cfg.DBName)
         if err != nil {
             log.Fatalf("%v", err)
         }
     }
-    err = utils.RunMigrations(cfg.DBName, "migrations")
-    if err != nil {
-        log.Fatalf("%v", err)
-    }
     dbAdmin.Close()
-    /*
+    
     // Connectar a la base de dades
     db, err := config.ConnectDB(cfg)
     if err != nil {
@@ -44,6 +41,13 @@ func main() {
     }
     defer db.Close()
     
+    utilsDB := utils.NewUtils(db)
+
+    err = utilsDB.RunMigrations(cfg.DBName, "migrations")
+    if err != nil {
+        log.Fatalf("%v", err)
+    }
+
     // Inicialitzar el servidor
     srv := server.NewServer(cfg, db)
     
@@ -56,5 +60,5 @@ func main() {
     if err := srv.Run(); err != nil {
         log.Fatalf("failed to start server: %v", err)
     }
-        */
+        
 }
