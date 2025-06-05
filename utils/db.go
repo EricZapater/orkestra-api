@@ -27,7 +27,7 @@ func(u *Utils)CheckDatabase(dbName string)(bool, error){
 	if err != nil {
 		return false, err
 	}
-	return true, nil
+	return exists, nil
 }
 
 func (u *Utils) CreateDatabase(dbName string) error{ 	
