@@ -89,9 +89,17 @@ func(u *Utils) RunMigrations(dbName string, migrationsDir string) error{
 		}
 
 		fmt.Printf("▶️  Aplicant %s...\n", filename)
-		_, err = u.db.Exec(sqlContent)
-		if err != nil {
-			return fmt.Errorf("error aplicant %s: %w", filename, err)
+		queries := strings.Split(string(sqlContent), ";")
+		for _, q := range queries {
+			q = strings.TrimSpace(q)
+			if q == "" {
+				continue
+			}
+			_, err := u.db.Exec(q)
+			if err != nil {
+				fmt.Printf("❌ Error a '%s': %v\n", q, err)
+				return err
+			}
 		}
 
 		_, err = u.db.Exec(`INSERT INTO schema_migrations (filename, applied_at) VALUES ($1, $2)`, filename, time.Now())
