@@ -6,6 +6,7 @@ import (
 	"orkestra-api/internal/auth"
 	"orkestra-api/internal/customers"
 	"orkestra-api/internal/groups"
+	"orkestra-api/internal/health"
 	"orkestra-api/internal/meetings"
 	"orkestra-api/internal/projects"
 	"orkestra-api/internal/searches"
@@ -71,10 +72,11 @@ func (s *Server) Setup() error {
 	customerHandler := customers.NewCustomerHandler(customerService)
 	projectHandler := projects.NewProjectHandler(projectService)
 
-
+	
 	// Configurar les rutes públiques (sense autenticació)
 	public := s.router.Group("/auth")
 	public.Use(actionLogMiddleware.LogAction())
+	public.GET("/health", health.CheckHealth)
 	users.RegisterPublicRoutes(public, userHandler)
 	auth.RegisterRoutes(public, authHandler, authMiddleware)
 
