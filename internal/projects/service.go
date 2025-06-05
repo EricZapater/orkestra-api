@@ -14,6 +14,7 @@ type ProjectService interface {
 	FindById(ctx context.Context, id string) (Project, error)
 	FindAll(ctx context.Context) ([]Project, error)
 	FindBetweenDates(ctx context.Context, startDate, endDate string) ([]Project, error)
+	FindCalendarBetweenDates(ctx context.Context, startDate, endDate string)([]ProjectCalendarResponse, error)
 }
 
 type projectService struct {
@@ -84,6 +85,20 @@ func(s *projectService) FindBetweenDates(ctx context.Context, startDate, endDate
 	return s.repo.FindBetweenDates(ctx, &pStartDate, &pEndDate)
 }
 
+func(s *projectService)FindCalendarBetweenDates(ctx context.Context, startDate, endDate string)([]ProjectCalendarResponse, error){
+	layout := "2006-01-02" 
+
+	pStartDate, err := time.Parse(layout, startDate)
+	if err != nil {
+		return nil, ErrInvalidDate
+	}
+	pEndDate, err := time.Parse(layout, endDate)
+	if err != nil {
+		return nil, ErrInvalidDate
+	}
+	return s.repo.FindCalendarBetweenDates(ctx, &pStartDate, &pEndDate)
+}
+
 func createModelFromRequest(request ProjectRequest)(Project, error){
 if 	request.Color == "" ||
 		request.CustomerID == "" ||
@@ -92,7 +107,7 @@ if 	request.Color == "" ||
 		request.EndDate == "" {
 			return Project{}, ErrInvalidRequest
 		}
-	layout := "2006-01-02" 
+	layout := time.RFC3339 
 
 	startDate, err := time.Parse(layout, request.StartDate)
 	if err != nil {

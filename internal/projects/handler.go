@@ -95,3 +95,19 @@ func(h *ProjectHandler)GetProjectsBetweenDates(c *gin.Context){
 
 	c.JSON(http.StatusOK, data)
 }
+
+func(h *ProjectHandler)GetProjectsCalendarBetweenDates(c *gin.Context){
+	startDate := c.Query("start_date")
+	endDate := c.Query("end_date")
+	if startDate == "" || endDate == ""  {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Falten paràmetres de consulta"})
+		return
+	}
+	data, err := h.service.FindCalendarBetweenDates(c.Request.Context(), startDate, endDate)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, data)
+}

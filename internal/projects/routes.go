@@ -9,4 +9,5 @@ func RegisterRoutes(router *gin.RouterGroup, handler *ProjectHandler) {
 	router.GET("/projects/:id", handler.GetProjectByID)
 	router.GET("/projects", handler.GetAllProjects)
 	router.GET("/projects/dates", handler.GetProjectsBetweenDates)
+	router.GET("/projects/calendar/dates", handler.GetProjectsCalendarBetweenDates)
 }

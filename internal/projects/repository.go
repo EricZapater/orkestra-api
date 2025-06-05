@@ -15,6 +15,7 @@ type ProjectRepository interface {
 	FindById(ctx context.Context, id uuid.UUID) (Project, error)
 	FindAll(ctx context.Context) ([]Project, error)
 	FindBetweenDates(ctx context.Context, startDate, endDate *time.Time)([]Project, error)
+	FindCalendarBetweenDates(ctx context.Context, startDate, endDate *time.Time)([]ProjectCalendarResponse, error)
 }
 
 type projectRepository struct {
@@ -99,6 +100,33 @@ func(r *projectRepository) FindBetweenDates(ctx context.Context, startDate, endD
 	for rows.Next(){
 		var project Project
 		if err := rows.Scan(&project.ID, &project.Description, &project.StartDate, &project.EndDate, &project.Color, &project.CustomerID); err != nil{
+			return nil, err
+		}
+		projects = append(projects, project)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return projects, nil
+}
+
+func(r *projectRepository) FindCalendarBetweenDates(ctx context.Context, startDate, endDate *time.Time)([]ProjectCalendarResponse, error){
+	var projects []ProjectCalendarResponse
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT p.id, 
+				'[' || COALESCE(c.comercial_name, '')::text || '] ' || p.description::text  AS title, 
+				p.start_date, p.end_date, p.color
+				FROM projects p
+				LEFT JOIN customers c ON p.customer_id = c.id
+		WHERE start_date BETWEEN $1 AND $2
+	`, startDate, endDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next(){
+		var project ProjectCalendarResponse
+		if err := rows.Scan(&project.ID, &project.Title, &project.StartDate, &project.EndDate, &project.Color); err != nil{
 			return nil, err
 		}
 		projects = append(projects, project)

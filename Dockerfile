@@ -8,6 +8,9 @@ RUN go mod download
 COPY . .
 RUN go mod tidy
 
+COPY migrations /app/migrations
+
+
 RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/api
 
 # Production stage

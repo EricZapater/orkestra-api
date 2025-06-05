@@ -35,7 +35,7 @@ ALTER TABLE projects ADD COLUMN search_vector tsvector GENERATED ALWAYS AS (
 
 CREATE INDEX idx_projects_search_vector ON projects USING GIN (search_vector);
 
-DROP VIEW public.search_index
+DROP VIEW public.search_index;
 CREATE OR REPLACE VIEW public.search_index
  AS
  SELECT 'Reunió'::text AS tipus,
