@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 )
 
 type Project struct {
@@ -13,4 +14,6 @@ type Project struct {
 	EndDate     *time.Time `json:"end_date" db:"end_date"`
 	Color       string `json:"color" db:"color"`
 	CustomerID  uuid.UUID `json:"customer_id" db:"customer_id"`
+	Amount        decimal.Decimal `json:"amount" db:"amount"`
+	EstimatedCost decimal.Decimal `json:"estimated_cost" db:"estimated_cost"`
 }

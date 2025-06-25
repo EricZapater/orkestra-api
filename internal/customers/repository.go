@@ -15,6 +15,7 @@ type CustomerRepository interface {
 	FindAll(ctx context.Context)([]Customer, error)
 	AddUserToCustomer(ctx context.Context, id, customerID, userID uuid.UUID) (error)
 	RemoveUserFromCustomer(ctx context.Context, customerID, userID uuid.UUID) (error)
+	FindCustomerByUserID(ctx context.Context, userID uuid.UUID) (Customer, error)
 }
 
 type customerRepository struct{
@@ -67,6 +68,7 @@ if err != nil {
 }
 return customer, nil
 }
+
 func(r *customerRepository) FindAll(ctx context.Context)([]Customer, error){
 	var customers []Customer
 	rows, err := r.db.QueryContext(ctx, `
@@ -106,4 +108,17 @@ func(r *customerRepository) RemoveUserFromCustomer(ctx context.Context, customer
 		return err
 	}
 	return nil
+}
+func(r *customerRepository) FindCustomerByUserID(ctx context.Context, userID uuid.UUID) (Customer, error){
+	var customer Customer
+	err := r.db.QueryRowContext(ctx, `
+		SELECT c.id, c.comercial_name, c.vat_number, c.phone_number 
+		FROM customers c
+		INNER JOIN customer_users cu ON c.id = cu.customer_id
+		WHERE cu.user_id = $1`, userID,
+).Scan(&customer.ID, &customer.ComercialName, &customer.VatNumber, &customer.PhoneNumber)
+if err != nil {
+	return Customer{}, err
+}
+return customer, nil
 }

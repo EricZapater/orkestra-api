@@ -31,9 +31,9 @@ func NewUserRepository(db *sql.DB) UserRepository {
 
 func (r *userRepository) Create(ctx context.Context, user User) (User, error) {
 	_, err := r.db.ExecContext(ctx, `
-		INSERT INTO users (id, name, surname, phone_number, email, username, password, is_verified, is_active)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		user.ID, user.Name, user.Surname, user.PhoneNumber, user.Email, user.Username, user.Password, user.IsVerified, user.IsActive,
+		INSERT INTO users (id, name, surname, phone_number, email, username, password, is_verified, is_active, profile_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+		user.ID, user.Name, user.Surname, user.PhoneNumber, user.Email, user.Username, user.Password, user.IsVerified, user.IsActive, user.ProfileID,
     )
     if err != nil {
         return User{}, fmt.Errorf("error inserting user: %w", err)
@@ -44,9 +44,9 @@ func (r *userRepository) Create(ctx context.Context, user User) (User, error) {
 func(r *userRepository) Update(ctx context.Context, user User) (User, error) {
 	_, err := r.db.ExecContext(ctx, `
 		UPDATE users
-		SET name = $1, surname = $2, phone_number = $3, email = $4, username = $5, is_active = $6
-		WHERE id = $7`,
-		user.Name, user.Surname, user.PhoneNumber, user.Email, user.Username, user.IsActive, user.ID,
+		SET name = $1, surname = $2, phone_number = $3, email = $4, username = $5, is_active = $6, profile_id = $7
+		WHERE id = $8`,
+		user.Name, user.Surname, user.PhoneNumber, user.Email, user.Username, user.IsActive, user.ProfileID, user.ID,
 	)
 	if err != nil {
 		return User{}, fmt.Errorf("error updating user: %w", err)
@@ -100,9 +100,9 @@ func(r *userRepository) VerifyUser(ctx context.Context, id uuid.UUID) (error) {
 
 func(r *userRepository) FindByID(ctx context.Context, id uuid.UUID) (User, error){
 	var user User
-	row := r.db.QueryRowContext(ctx, `SELECT id, name, surname, phone_number, email, username, password, is_verified, is_active, created_at, password_changed_at FROM users WHERE id = $1`, id)
+	row := r.db.QueryRowContext(ctx, `SELECT id, name, surname, phone_number, email, username, password, is_verified, is_active, created_at, password_changed_at, profile_id FROM users WHERE id = $1`, id)
 	
-	err := row.Scan(&user.ID, &user.Name, &user.Surname, &user.PhoneNumber, &user.Email, &user.Username, &user.Password, &user.IsVerified, &user.IsActive, &user.CreatedAt, &user.PasswordChangedAt)
+	err := row.Scan(&user.ID, &user.Name, &user.Surname, &user.PhoneNumber, &user.Email, &user.Username, &user.Password, &user.IsVerified, &user.IsActive, &user.CreatedAt, &user.PasswordChangedAt, &user.ProfileID)
 	if err == sql.ErrNoRows {
 		return User{}, ErrUserNotFound
 	}else if err != nil {
@@ -116,9 +116,9 @@ func(r *userRepository) FindByID(ctx context.Context, id uuid.UUID) (User, error
 
 func(r *userRepository) FindByUsername(ctx context.Context, username string) (User, error)	{
 	var user User
-	row := r.db.QueryRowContext(ctx, `SELECT id, name, surname, phone_number, email, username, password, is_verified, is_active, created_at, password_changed_at FROM users WHERE username = $1`, username)
+	row := r.db.QueryRowContext(ctx, `SELECT id, name, surname, phone_number, email, username, password, is_verified, is_active, created_at, password_changed_at, profile_id FROM users WHERE username = $1`, username)
 	
-	err := row.Scan(&user.ID, &user.Name, &user.Surname, &user.PhoneNumber, &user.Email, &user.Username, &user.Password, &user.IsVerified, &user.IsActive, &user.CreatedAt, &user.PasswordChangedAt)
+	err := row.Scan(&user.ID, &user.Name, &user.Surname, &user.PhoneNumber, &user.Email, &user.Username, &user.Password, &user.IsVerified, &user.IsActive, &user.CreatedAt, &user.PasswordChangedAt, &user.ProfileID)
 	if err == sql.ErrNoRows {
 		return User{}, ErrUserNotFound
 	}else if err != nil {
@@ -132,9 +132,9 @@ func(r *userRepository) FindByUsername(ctx context.Context, username string) (Us
 
 func(r *userRepository) FindByPhoneNumber(ctx context.Context, phoneNumber string) (User, error)	{
 	var user User
-	row := r.db.QueryRowContext(ctx, `SELECT id, name, surname, phone_number, email, username, password, is_verified, is_active, created_at, password_changed_at FROM users WHERE phone_number = $1`, phoneNumber)
+	row := r.db.QueryRowContext(ctx, `SELECT id, name, surname, phone_number, email, username, password, is_verified, is_active, created_at, password_changed_at, profile_id FROM users WHERE phone_number = $1`, phoneNumber)
 	
-	err := row.Scan(&user.ID, &user.Name, &user.Surname, &user.PhoneNumber, &user.Email, &user.Username, &user.Password, &user.IsVerified, &user.IsActive, &user.CreatedAt, &user.PasswordChangedAt)
+	err := row.Scan(&user.ID, &user.Name, &user.Surname, &user.PhoneNumber, &user.Email, &user.Username, &user.Password, &user.IsVerified, &user.IsActive, &user.CreatedAt, &user.PasswordChangedAt, &user.ProfileID)
 	if err == sql.ErrNoRows {
 		return User{}, ErrUserNotFound
 	}else if err != nil {
@@ -148,14 +148,14 @@ func(r *userRepository) FindByPhoneNumber(ctx context.Context, phoneNumber strin
 
 func(r *userRepository) FindAll(ctx context.Context) ([]User, error){
 	var users []User
-	rows, err := r.db.QueryContext(ctx, `SELECT id, name, surname, phone_number, email, username, password, is_verified, is_active, created_at, password_changed_at FROM users`)
+	rows, err := r.db.QueryContext(ctx, `SELECT id, name, surname, phone_number, email, username, password, is_verified, is_active, created_at, password_changed_at, profile_id FROM users`)
 	if err != nil {
 		return nil, fmt.Errorf("error getting users: %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var user User
-		err := rows.Scan(&user.ID, &user.Name, &user.Surname, &user.PhoneNumber, &user.Email, &user.Username, &user.Password, &user.IsVerified, &user.IsActive, &user.CreatedAt, &user.PasswordChangedAt)
+		err := rows.Scan(&user.ID, &user.Name, &user.Surname, &user.PhoneNumber, &user.Email, &user.Username, &user.Password, &user.IsVerified, &user.IsActive, &user.CreatedAt, &user.PasswordChangedAt, &user.ProfileID)
 		if err != nil {
 			return nil, fmt.Errorf("error scanning user: %w", err)
 		}
@@ -167,7 +167,7 @@ func(r *userRepository) FindAll(ctx context.Context) ([]User, error){
 func(r *userRepository) FindByGroupId(ctx context.Context, groupId uuid.UUID) ([]User,error) {
 	var users []User
 	rows, err := r.db.QueryContext(ctx, 
-		`SELECT u.id, u.name, u.surname, u.phone_number, u.email, u.username, u.password, u.is_verified, u.is_active, u.created_at, u.password_changed_at 
+		`SELECT u.id, u.name, u.surname, u.phone_number, u.email, u.username, u.password, u.is_verified, u.is_active, u.created_at, u.password_changed_at, u.profile_id 
 		FROM users u
 		INNER JOIN group_members gm ON u.id = gm.user_id
 		WHERE gm.group_id = $1`, groupId)
@@ -177,7 +177,7 @@ func(r *userRepository) FindByGroupId(ctx context.Context, groupId uuid.UUID) ([
 	defer rows.Close()
 	for rows.Next() {
 		var user User
-		err := rows.Scan(&user.ID, &user.Name, &user.Surname, &user.PhoneNumber, &user.Email, &user.Username, &user.Password, &user.IsVerified, &user.IsActive, &user.CreatedAt, &user.PasswordChangedAt)
+		err := rows.Scan(&user.ID, &user.Name, &user.Surname, &user.PhoneNumber, &user.Email, &user.Username, &user.Password, &user.IsVerified, &user.IsActive, &user.CreatedAt, &user.PasswordChangedAt, &user.ProfileID)
 		if err != nil {
 			return nil, fmt.Errorf("error scanning user: %w", err)
 		}

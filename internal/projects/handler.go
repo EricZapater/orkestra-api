@@ -7,12 +7,12 @@ import (
 )
 
 type ProjectHandler struct {
-	service ProjectService
+	service ProjectService	
 }
 
 func NewProjectHandler(service ProjectService) *ProjectHandler {
 	return &ProjectHandler{
-		service: service,
+		service: service,		
 	}
 }
 
@@ -71,12 +71,19 @@ func(h *ProjectHandler) GetProjectByID(c *gin.Context){
 }
 
 func(h *ProjectHandler)GetAllProjects(c *gin.Context){
-	data, err := h.service.FindAll(c.Request.Context())
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
 
+	userID, exists := c.Get("id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "No s'ha trobat l'identitat de l'usuari"})
+		return
+	}	
+	
+		data, err := h.service.FindAllByUserID(c.Request.Context(), userID.(string))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	
 	c.JSON(http.StatusOK, data)
 }
 
@@ -103,11 +110,15 @@ func(h *ProjectHandler)GetProjectsCalendarBetweenDates(c *gin.Context){
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Falten paràmetres de consulta"})
 		return
 	}
-	data, err := h.service.FindCalendarBetweenDates(c.Request.Context(), startDate, endDate)
+	userID, exists := c.Get("id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "No s'ha trobat l'identitat de l'usuari"})
+		return
+	}		
+	data, err := h.service.FindCalendarBetweenDatesByUserID(c.Request.Context(), userID.(string), startDate, endDate)	
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
 	c.JSON(http.StatusOK, data)
 }

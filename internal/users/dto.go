@@ -12,6 +12,7 @@ type CreateUserRequest struct {
 	Email       string `json:"email" binding:"required"`
 	Username    string `json:"username" binding:"required"`
 	Password    string `json:"password" binding:"required"`
+	ProfileID   string `json:"profile_id" binding:"required"`
 }
 
 type UpdateUserRequest struct {
@@ -21,6 +22,7 @@ type UpdateUserRequest struct {
 	Email       string `json:"email" binding:"required"`
 	Username    string `json:"username" binding:"required"`
 	IsActive    bool   `json:"is_active"`
+	ProfileID   string `json:"profile_id" binding:"required"`
 }
 
 type ChangePasswordRequest struct {
@@ -45,6 +47,7 @@ type UserResponse struct {
 	IsActive          bool    `json:"is_active" db:"is_active"`
 	CreatedAt         string  `json:"created_at" db:"created_at"`
 	PasswordChangedAt *string `json:"password_changed_at" db:"password_changed_at"`
+	ProfileID         string  `json:"profile_id" db:"profile_id"`
 }
 
 type LoginResponse struct {

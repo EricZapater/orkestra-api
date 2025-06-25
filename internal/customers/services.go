@@ -2,6 +2,7 @@ package customers
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 )
@@ -14,6 +15,7 @@ type CustomerService interface {
 	FindAll(ctx context.Context)([]Customer, error)
 	AddUserToCustomer(ctx context.Context, request UserCustomerRequest) (error)
 	RemoveUserFromCustomer(ctx context.Context, request UserCustomerRequest) (error)
+	FindCustomerByUserID(ctx context.Context, userID string) (Customer, error)
 }
 
 type customerService struct {
@@ -96,4 +98,20 @@ func(s *customerService) RemoveUserFromCustomer(ctx context.Context, request Use
 		return  ErrInvalidID
 	}
 	return s.repo.RemoveUserFromCustomer(ctx, customerUUID, userUUID)
+}
+
+func(s *customerService) FindCustomerByUserID(ctx context.Context, userID string) (Customer, error){
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return Customer{}, ErrInvalidID
+	}
+
+	customer, err := s.repo.FindCustomerByUserID(ctx, userUUID)
+	if err != nil && err != sql.ErrNoRows {
+		return Customer{}, err
+	}
+	if err == sql.ErrNoRows {
+		return Customer{}, nil
+	}
+	return customer, nil
 }

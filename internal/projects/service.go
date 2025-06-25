@@ -2,27 +2,31 @@ package projects
 
 import (
 	"context"
+	"fmt"
+	"orkestra-api/internal/customers"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 )
 
 type ProjectService interface {
 	Create(ctx context.Context, request ProjectRequest) (Project, error)
 	Update(ctx context.Context, id string, request ProjectRequest) (Project, error)
 	Delete(ctx context.Context, id string) error
-	FindById(ctx context.Context, id string) (Project, error)
-	FindAll(ctx context.Context) ([]Project, error)
-	FindBetweenDates(ctx context.Context, startDate, endDate string) ([]Project, error)
-	FindCalendarBetweenDates(ctx context.Context, startDate, endDate string)([]ProjectCalendarResponse, error)
+	FindById(ctx context.Context, id string) (Project, error)		
+	FindAllByUserID(ctx context.Context, id string) ([]Project, error)
+	FindBetweenDates(ctx context.Context, startDate, endDate string) ([]Project, error)	
+	FindCalendarBetweenDatesByUserID(ctx context.Context,userID, startDate, endDate string)([]ProjectCalendarResponse, error)
 }
 
 type projectService struct {
 	repo ProjectRepository
+	customerService customers.CustomerService
 }
 
-func NewProjectService(repo ProjectRepository)ProjectService{
-	return &projectService{repo}
+func NewProjectService(repo ProjectRepository, customerService customers.CustomerService)ProjectService{
+	return &projectService{repo, customerService}
 }
 
 func(s *projectService) Create(ctx context.Context, request ProjectRequest) (Project, error){
@@ -67,8 +71,27 @@ func(s *projectService) FindById(ctx context.Context, id string) (Project, error
 	return s.repo.FindById(ctx, projectUUID)
 }
 
-func(s *projectService) FindAll(ctx context.Context) ([]Project, error){
+func(s *projectService) FindAllByUserID(ctx context.Context, userID string) ([]Project, error){
+	customer, err := s.customerService.FindCustomerByUserID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("error finding customer by user ID: %w", err)
+	}
+	if customer.ID == uuid.Nil {
+		return s.findAll(ctx)
+	}
+	return s.findAllByUserID(ctx, userID)
+}
+
+func(s *projectService) findAll(ctx context.Context) ([]Project, error){
 	return s.repo.FindAll(ctx)
+}
+
+func(s *projectService) findAllByUserID(ctx context.Context, userID string) ([]Project, error){
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, ErrInvalidID
+	}
+	return s.repo.FindAllByUserID(ctx, userUUID)
 }
 
 func(s *projectService) FindBetweenDates(ctx context.Context, startDate, endDate string) ([]Project, error){
@@ -85,7 +108,18 @@ func(s *projectService) FindBetweenDates(ctx context.Context, startDate, endDate
 	return s.repo.FindBetweenDates(ctx, &pStartDate, &pEndDate)
 }
 
-func(s *projectService)FindCalendarBetweenDates(ctx context.Context, startDate, endDate string)([]ProjectCalendarResponse, error){
+func(s *projectService)FindCalendarBetweenDatesByUserID(ctx context.Context, userID, startDate, endDate string)([]ProjectCalendarResponse, error){
+	customer, err := s.customerService.FindCustomerByUserID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("error finding customer by user ID: %w", err)
+	}
+	if customer.ID == uuid.Nil {
+		return s.findCalendarBetweenDates(ctx, startDate, endDate)
+	}
+	return s.findCalendarBetweenDatesByUserID(ctx, userID, startDate, endDate)
+}
+
+func(s *projectService)findCalendarBetweenDates(ctx context.Context, startDate, endDate string)([]ProjectCalendarResponse, error){
 	layout := "2006-01-02" 
 
 	pStartDate, err := time.Parse(layout, startDate)
@@ -97,6 +131,24 @@ func(s *projectService)FindCalendarBetweenDates(ctx context.Context, startDate, 
 		return nil, ErrInvalidDate
 	}
 	return s.repo.FindCalendarBetweenDates(ctx, &pStartDate, &pEndDate)
+}
+
+func(s *projectService)findCalendarBetweenDatesByUserID(ctx context.Context, userID, startDate, endDate string)([]ProjectCalendarResponse, error){
+	layout := "2006-01-02" 
+
+	pStartDate, err := time.Parse(layout, startDate)
+	if err != nil {
+		return nil, ErrInvalidDate
+	}
+	pEndDate, err := time.Parse(layout, endDate)
+	if err != nil {
+		return nil, ErrInvalidDate
+	}
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, ErrInvalidID
+	}
+	return s.repo.FindCalendarBetweenDatesByUserID(ctx, userUUID, &pStartDate, &pEndDate)
 }
 
 func createModelFromRequest(request ProjectRequest)(Project, error){
@@ -123,6 +175,15 @@ if 	request.Color == "" ||
 		return Project{}, ErrInvalidID
 	}
 
+	amount, err := decimal.NewFromString(request.Amount)
+	if err != nil {
+		return Project{}, ErrInvalidRequest
+	}
+	estimatedCost, err := decimal.NewFromString(request.EstimatedCost)
+	if err != nil {
+		return Project{}, ErrInvalidRequest
+	}
+
 	project := Project{
 		ID: uuid.New(),
 		Description: request.Description,
@@ -130,6 +191,8 @@ if 	request.Color == "" ||
 		StartDate: &startDate,
 		EndDate: &endDate,
 		CustomerID: customerUUID,
+		Amount: amount,
+		EstimatedCost: estimatedCost,
 	}
 	return project, nil
 }

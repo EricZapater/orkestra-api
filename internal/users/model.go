@@ -18,4 +18,5 @@ type User struct {
 	IsActive bool `json:"is_active" db:"is_active"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	PasswordChangedAt *time.Time `json:"password_changed_at" db:"password_changed_at"`
+	ProfileID uuid.UUID `json:"profile_id" db:"profile_id"`
 }

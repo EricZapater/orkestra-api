@@ -4,12 +4,14 @@ import (
 	"database/sql"
 	"orkestra-api/config"
 	"orkestra-api/internal/auth"
+	"orkestra-api/internal/costitems"
 	"orkestra-api/internal/customers"
 	"orkestra-api/internal/groups"
 	"orkestra-api/internal/health"
 	"orkestra-api/internal/meetings"
 	"orkestra-api/internal/projects"
 	"orkestra-api/internal/searches"
+	"orkestra-api/internal/tasks"
 	"orkestra-api/internal/users"
 	"orkestra-api/middleware"
 
@@ -51,6 +53,8 @@ func (s *Server) Setup() error {
 	searchRepo := searches.NewSearchRepository(s.db)
 	customerRepo := customers.NewCustomerRepository(s.db)
 	projectRepo := projects.NewProjectRepository(s.db)
+	taskRepo := tasks.NewTaskRepository(s.db)
+	costItemRepo := costitems.NewCostItemRepository(s.db)
 
 
 	// Inicialitzar serveis
@@ -60,7 +64,9 @@ func (s *Server) Setup() error {
 	meetingService := meetings.NewMeetingService(meetingRepo)
 	searchService := searches.NewSearchService(searchRepo)
 	customerService := customers.NewCustomerService(customerRepo)
-	projectService := projects.NewProjectService(projectRepo)
+	projectService := projects.NewProjectService(projectRepo, customerService)
+	taskService := tasks.NewTaskService(taskRepo, userService, projectService)
+	costItemService := costitems.NewCostItemService(costItemRepo, projectService)
 
 
 	// Inicialitzar handlers
@@ -71,6 +77,8 @@ func (s *Server) Setup() error {
 	searchHandler := searches.NewSearchHandler(searchService)
 	customerHandler := customers.NewCustomerHandler(customerService)
 	projectHandler := projects.NewProjectHandler(projectService)
+	taskHandler := tasks.NewTaskHandler(taskService)
+	costItemHandler := costitems.NewCostItemHandler(costItemService)
 
 	
 	// Configurar les rutes públiques (sense autenticació)
@@ -94,6 +102,8 @@ func (s *Server) Setup() error {
 	searches.RegisterRoutes(protected, searchHandler)
 	customers.RegisterRoutes(protected, customerHandler)
 	projects.RegisterRoutes(protected, projectHandler)
+	tasks.RegisterRoutes(protected, taskHandler)
+	costitems.RegisterRoutes(protected, costItemHandler)
 	
 	return nil
 }
