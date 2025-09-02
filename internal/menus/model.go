@@ -7,7 +7,18 @@ type Menu struct {
 	Label       string    `json:"label" db:"label"`
 	Icon        string    `json:"icon" db:"icon"`
 	Route       string    `json:"route" db:"route"`
-	ParentID    uuid.UUID `json:"parent_id" db:"parent_id"`
+	ParentID    *uuid.UUID `json:"parent_id" db:"parent_id"`
 	SortOrder   int       `json:"sort_order" db:"sort_order"`
 	IsSeparator bool      `json:"is_separator" db:"is_separator"`
+}
+
+type MenuTree struct {
+	ID          uuid.UUID  `json:"id"`
+	Label       string     `json:"label"`
+	Icon        string     `json:"icon"`
+	Route       string     `json:"route"`
+	ParentID    *uuid.UUID  `json:"parent_id"`
+	SortOrder   int        `json:"sort_order"`
+	IsSeparator bool       `json:"is_separator"`
+	Children    []MenuTree `json:"children,omitempty"`
 }

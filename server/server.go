@@ -9,6 +9,8 @@ import (
 	"orkestra-api/internal/groups"
 	"orkestra-api/internal/health"
 	"orkestra-api/internal/meetings"
+	"orkestra-api/internal/menus"
+	"orkestra-api/internal/operators"
 	"orkestra-api/internal/projects"
 	"orkestra-api/internal/searches"
 	"orkestra-api/internal/tasks"
@@ -55,11 +57,13 @@ func (s *Server) Setup() error {
 	projectRepo := projects.NewProjectRepository(s.db)
 	taskRepo := tasks.NewTaskRepository(s.db)
 	costItemRepo := costitems.NewCostItemRepository(s.db)
+	menuRepo := menus.NewMenuRepository(s.db)
+	operatorRepo := operators.NewOperatorRepository(s.db)
 
 
 	// Inicialitzar serveis
 	userService := users.NewUserService(userRepo)
-	authService := auth.NewAuthService(userRepo, authMiddleware)
+	authService := auth.NewAuthService(userRepo, authMiddleware)	
 	groupService := groups.NewGroupService(groupRepo)
 	meetingService := meetings.NewMeetingService(meetingRepo)
 	searchService := searches.NewSearchService(searchRepo)
@@ -67,6 +71,9 @@ func (s *Server) Setup() error {
 	projectService := projects.NewProjectService(projectRepo, customerService)
 	taskService := tasks.NewTaskService(taskRepo, userService, projectService)
 	costItemService := costitems.NewCostItemService(costItemRepo, projectService)
+	menuService := menus.NewMenuService(menuRepo)
+	operatorService := operators.NewOperatorService(operatorRepo)
+	
 
 
 	// Inicialitzar handlers
@@ -79,6 +86,8 @@ func (s *Server) Setup() error {
 	projectHandler := projects.NewProjectHandler(projectService)
 	taskHandler := tasks.NewTaskHandler(taskService)
 	costItemHandler := costitems.NewCostItemHandler(costItemService)
+	menuHandler := menus.NewMenuHandler(menuService)
+	operatorHandler := operators.NewOperatorHandler(operatorService)
 
 	
 	// Configurar les rutes públiques (sense autenticació)
@@ -104,6 +113,8 @@ func (s *Server) Setup() error {
 	projects.RegisterRoutes(protected, projectHandler)
 	tasks.RegisterRoutes(protected, taskHandler)
 	costitems.RegisterRoutes(protected, costItemHandler)
+	menus.RegisterRoutes(protected, menuHandler)
+	operators.RegisterRoutes(protected, operatorHandler)
 	
 	return nil
 }

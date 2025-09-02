@@ -10,4 +10,5 @@ func RegisterRoutes(router *gin.RouterGroup, handler *CustomerHandler){
 	router.GET("/customers", handler.GetAllCustomers)
 	router.POST("/customers/adduser", handler.AddUserToCustomer)
 	router.POST("/customers/removeuser", handler.RemoveUserFromCustomer)
+	router.GET("/customers/userbycustomer/:id", handler.GetUsersByCustomerID)
 }

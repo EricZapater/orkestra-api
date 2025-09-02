@@ -3,6 +3,7 @@ package customers
 import (
 	"context"
 	"database/sql"
+	"orkestra-api/internal/users"
 
 	"github.com/google/uuid"
 )
@@ -16,6 +17,7 @@ type CustomerService interface {
 	AddUserToCustomer(ctx context.Context, request UserCustomerRequest) (error)
 	RemoveUserFromCustomer(ctx context.Context, request UserCustomerRequest) (error)
 	FindCustomerByUserID(ctx context.Context, userID string) (Customer, error)
+	FindUSersByCustomerID(ctx context.Context, customerID string) ([]users.User, error)
 }
 
 type customerService struct {
@@ -114,4 +116,19 @@ func(s *customerService) FindCustomerByUserID(ctx context.Context, userID string
 		return Customer{}, nil
 	}
 	return customer, nil
+}
+
+func(s *customerService) FindUSersByCustomerID(ctx context.Context, customerID string) ([]users.User, error){
+	customerUUID, err := uuid.Parse(customerID)
+	if err != nil {
+		return nil, ErrInvalidID
+	}
+	users, err := s.repo.FindUsersByCustomerID(ctx, customerUUID)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return users, nil
 }

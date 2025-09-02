@@ -14,6 +14,8 @@ type MenuRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID)(Menu, error)
 	FindByProfileID(ctx context.Context, id uuid.UUID)([]Menu, error)
 	FindAll(ctx context.Context)([]Menu, error)
+	AddMenuToProfile(ctx context.Context, profileID uuid.UUID, menuID uuid.UUID) error
+	RemoveMenuFromProfile(ctx context.Context, profileID uuid.UUID, menuID uuid.UUID) error
 }
 
 type menuRepository struct {
@@ -75,7 +77,7 @@ func(r *menuRepository) FindByProfileID(ctx context.Context, profileID uuid.UUID
 	FROM menu_items m
 		INNER JOIN profile_menus p ON p.menu_id = m.id
 	WHERE p.profile_id = $1
-	ORDER BY m.sort_order
+	ORDER BY m.parent_id, m.sort_order
 	`
 	rows, err := r.db.QueryContext(ctx, query, profileID)
 	if err != nil {
@@ -115,4 +117,18 @@ func(r *menuRepository) FindAll(ctx context.Context)([]Menu, error){
 		return nil, err
 	}
 	return menus, nil
+}
+
+func(r *menuRepository) AddMenuToProfile(ctx context.Context, profileID uuid.UUID, menuID uuid.UUID) error {
+	_, err := r.db.ExecContext(ctx, `
+	INSERT INTO profile_menus(profile_id, menu_id)
+	VALUES($1, $2)
+	`, profileID, menuID)
+	return err
+}
+func(r *menuRepository) RemoveMenuFromProfile(ctx context.Context, profileID uuid.UUID, menuID uuid.UUID) error{
+	_, err := r.db.ExecContext(ctx, `
+	DELETE FROM profile_menus WHERE profile_id = $1 AND menu_id = $2
+	`, profileID, menuID)
+	return err
 }

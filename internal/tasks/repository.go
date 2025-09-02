@@ -170,7 +170,7 @@ func (r *taskRepository) FindAll(ctx context.Context) ([]Task, error){
 	var tasks []Task
 	rows, err := r.db.QueryContext(ctx,`
 	SELECT id, description, notes, user_id, status, priority, project_id, start_date, end_date
-	FROM tasks
+	FROM tasks ORDER BY project_id, id
 	`)
 	if err != nil {
 		return nil, err

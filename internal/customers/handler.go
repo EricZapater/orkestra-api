@@ -109,3 +109,14 @@ func(h *CustomerHandler) RemoveUserFromCustomer(c *gin.Context){
 
 	c.JSON(http.StatusOK,gin.H{"res":"Configuration removed"})
 }
+
+func(h *CustomerHandler)GetUsersByCustomerID(c *gin.Context){
+	id := c.Param("id")
+	users, err := h.customerService.FindUSersByCustomerID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
+}

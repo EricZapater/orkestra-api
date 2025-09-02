@@ -44,7 +44,8 @@ func mapUserToResponse(user User) UserResponse {
 		IsVerified: user.IsVerified,
 		IsActive: user.IsActive,
 		CreatedAt: user.CreatedAt.Format(time.RFC3339),
-		PasswordChangedAt: &passwordchangedat,				
+		PasswordChangedAt: &passwordchangedat,		
+		ProfileID: user.ProfileID.String(),		
 	}
 	return response
 }
@@ -87,6 +88,7 @@ func(s *userService) Create(ctx context.Context, request CreateUserRequest) (Use
 		IsActive: true,		
 		CreatedAt: now,
 		PasswordChangedAt: &now,
+		ProfileID: uuid.MustParse(request.ProfileID),
 	}
 
 	// Insert the user into the database
@@ -125,6 +127,7 @@ func(s *userService) Update(ctx context.Context,id string,  request UpdateUserRe
 		Username: request.Username,		
 		IsActive: request.IsActive,		
 		PasswordChangedAt: &now,
+		ProfileID: uuid.MustParse(request.ProfileID),
 	}
 
 	response, err := s.repo.Update(ctx, user)

@@ -1,0 +1,2 @@
+ALTER TABLE menu_items 
+ALTER COLUMN parent_id DROP NOT NULL;

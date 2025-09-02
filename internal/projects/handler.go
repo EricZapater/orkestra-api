@@ -122,3 +122,91 @@ func(h *ProjectHandler)GetProjectsCalendarBetweenDates(c *gin.Context){
 	}
 	c.JSON(http.StatusOK, data)
 }
+
+func (h *ProjectHandler) AddOperatorToProject(c *gin.Context) {
+	var request OperatorToProjectRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	operators, err := h.service.AddOperator(c.Request.Context(), request)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, operators)
+}
+
+func (h *ProjectHandler) RemoveOperatorFromProject(c *gin.Context) {
+	id := c.Param("id")	
+	operators, err := h.service.RemoveOperator(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, operators)
+}
+
+func (h *ProjectHandler) GetOperatorsByProjectID(c *gin.Context) {
+	projectID := c.Param("project_id")
+	operators, err := h.service.FindOperatorsByProjectID(c.Request.Context(), projectID)	
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, operators)
+}
+
+func(h *ProjectHandler)GetOperatorsCalendarBetweenDates(c *gin.Context){
+	startDate := c.Query("start_date")
+	endDate := c.Query("end_date")
+	if startDate == "" || endDate == ""  {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Falten paràmetres de consulta"})
+		return
+	}
+	data, err := h.service.FindOperatorsCalendarBetweenDates(c.Request.Context(), startDate, endDate)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, data)
+}
+
+
+func (h *ProjectHandler) AddCostItem(c *gin.Context){
+	var request CostItemRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	result, err := h.service.AddCostItem(c.Request.Context(), &request)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, result)
+}
+
+
+func (h *ProjectHandler) RemoveCostItem(c *gin.Context) {
+	id := c.Param("id")
+	err := h.service.RemoveCostItem(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}
+
+func(h *ProjectHandler)GetCostItemByProjectID(c *gin.Context){
+	id := c.Param("project_id")
+	data, err := h.service.FindCostItemsByProjectID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, data)
+}

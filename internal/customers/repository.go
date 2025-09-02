@@ -3,6 +3,8 @@ package customers
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"orkestra-api/internal/users"
 
 	"github.com/google/uuid"
 )
@@ -16,6 +18,7 @@ type CustomerRepository interface {
 	AddUserToCustomer(ctx context.Context, id, customerID, userID uuid.UUID) (error)
 	RemoveUserFromCustomer(ctx context.Context, customerID, userID uuid.UUID) (error)
 	FindCustomerByUserID(ctx context.Context, userID uuid.UUID) (Customer, error)
+	FindUsersByCustomerID(ctx context.Context, customerID uuid.UUID) ([]users.User, error)
 }
 
 type customerRepository struct{
@@ -121,4 +124,27 @@ if err != nil {
 	return Customer{}, err
 }
 return customer, nil
+}
+func(r *customerRepository) FindUsersByCustomerID(ctx context.Context, customerID uuid.UUID) ([]users.User, error){
+
+	var usersList []users.User
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT u.id, u.name, u.surname, u.phone_number, u.email, u.username, u.password, u.is_verified, u.is_active, u.created_at, u.password_changed_at, u.profile_id 
+		FROM users u
+			INNER JOIN customer_users cu ON u.id = cu.user_id
+		WHERE cu.customer_id = $1
+		`, customerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var user users.User
+		err := rows.Scan(&user.ID, &user.Name, &user.Surname, &user.PhoneNumber, &user.Email, &user.Username, &user.Password, &user.IsVerified, &user.IsActive, &user.CreatedAt, &user.PasswordChangedAt, &user.ProfileID)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning user: %w", err)
+		}
+		usersList = append(usersList, user)
+	}
+	return usersList, nil
 }
