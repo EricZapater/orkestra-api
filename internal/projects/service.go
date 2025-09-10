@@ -202,6 +202,14 @@ func(s *projectService) AddOperator(ctx context.Context, request OperatorToProje
 		StartDate: startDate,
 		EndDate: endDate,
 	}
+	project, err := s.repo.FindById(ctx, projectUUID)
+	if err != nil {
+		return nil, ErrProjectNotFound
+	}
+	if operatorToProject.StartDate.Before(*project.StartDate) || operatorToProject.EndDate.After(*project.EndDate) {
+		return nil, ErrOperatorDatesOutOfProjectRange
+	}
+	
 	operators, err := s.repo.AddOperator(ctx, operatorToProject)
 	if err != nil {
 		return nil, err

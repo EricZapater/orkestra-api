@@ -229,7 +229,7 @@ func(r *projectRepository) AddOperator(ctx context.Context, request OperatorToPr
 	return operatorsList, nil
 }
 func(r *projectRepository) RemoveOperator(ctx context.Context, project_id, operator_to_project_id uuid.UUID)([]OperatorToProject, error){
-	_, err := r.db.ExecContext(ctx, `DELETE FROM operators_to_projects WHERE ID`, operator_to_project_id)
+	_, err := r.db.ExecContext(ctx, `DELETE FROM operators_to_projects WHERE ID = $1`, operator_to_project_id)
 	if err != nil {
 		return nil, err
 	}

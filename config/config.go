@@ -15,6 +15,9 @@ type Config struct {
 	DBName  string `env:"DB_NAME" envDefault:"postgres"`
 	ApiPort string `env:"API_PORT" envDefault:"8080"`
 	JWTSecret string `env:"JWT_SECRET" envDefault:"abcd1234"`
+	LLMApiKey string `env:"LLM_API_KEY" envDefault:""`
+	LLMProvider string `env:"LLM_PROVIDER" envDefault:"openai"`
+	LLMUrl string `env:"LLM_URL" envDefault:"https://api.openai.com/v1/chat/completions"`
 }
 
 func LoadConfig() (*Config, error) {

@@ -8,6 +8,7 @@ import (
 	"orkestra-api/internal/customers"
 	"orkestra-api/internal/groups"
 	"orkestra-api/internal/health"
+	"orkestra-api/internal/llm"
 	"orkestra-api/internal/meetings"
 	"orkestra-api/internal/menus"
 	"orkestra-api/internal/operators"
@@ -73,6 +74,7 @@ func (s *Server) Setup() error {
 	costItemService := costitems.NewCostItemService(costItemRepo, projectService)
 	menuService := menus.NewMenuService(menuRepo)
 	operatorService := operators.NewOperatorService(operatorRepo)
+	llmService := llm.NewService(s.db, *s.cfg)
 	
 
 
@@ -88,6 +90,7 @@ func (s *Server) Setup() error {
 	costItemHandler := costitems.NewCostItemHandler(costItemService)
 	menuHandler := menus.NewMenuHandler(menuService)
 	operatorHandler := operators.NewOperatorHandler(operatorService)
+	llmHandler := llm.NewHandler(llmService)
 
 	
 	// Configurar les rutes públiques (sense autenticació)
@@ -115,6 +118,7 @@ func (s *Server) Setup() error {
 	costitems.RegisterRoutes(protected, costItemHandler)
 	menus.RegisterRoutes(protected, menuHandler)
 	operators.RegisterRoutes(protected, operatorHandler)
+	llm.RegisterRoutes(protected, llmHandler) // LLM routes are registered at the root level
 	
 	return nil
 }
